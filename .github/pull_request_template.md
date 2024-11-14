@@ -6,7 +6,7 @@
 
 ### Screenshots (if applicable)
 
-<!--- Put an `x` in all the boxes that apply: -->
+<!--- Put an x in all the boxes that apply: -->
 ### Check list:
 - [ ] I have updated CHANGES.md (if applicable)
 - [ ] My changes are unit tested (if applicable)
