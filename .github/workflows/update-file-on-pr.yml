@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.head_ref }}  # This checks out the pull request branch explicitly
+          ref: ${{ github.head_ref }}  # Check out the PR branch explicitly
 
       - name: Update file with PR title
         if: github.event.pull_request.merged == false
@@ -25,8 +25,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add your_file.txt
-          git commit -m "Add PR title: ${PR_TITLE}"
-          git push origin HEAD:${{ github.head_ref }}  # Push to the PR branch explicitly
+          git commit --amend --no-edit  # Amend the last commit without changing its message
+          git push origin HEAD:${{ github.head_ref }} --force  # Force-push to update the PR branch with the amended commit
 
   merge-pr-title-to-develop:
     if: github.event.pull_request.merged == true
