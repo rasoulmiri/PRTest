@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           fetch-depth: 1
 
@@ -30,7 +30,7 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add changes.md
-          git commit -m "Update changes.md with PR title: ${{ steps.get_pr_title.outputs.title }}"
+          git commit --amend -m "Update changes.md with PR title: ${{ steps.get_pr_title.outputs.title }}"
 
       - name: Pull latest changes
         run: git pull --rebase origin develop
@@ -39,4 +39,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          git push https://x-access-token:${GH_TOKEN}@github.com/rasoulmiri/PRTest.git HEAD:develop
+          git push https://x-access-token:${GH_TOKEN}@github.com/rasoulmiri/PRTest.git HEAD:develop --force
