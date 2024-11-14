@@ -6,20 +6,17 @@ on:
     branches: [develop]
 
 jobs:
-  amend-merge-commit-with-pr-title:
+  amend-last-commit-with-pr-title:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Reset to previous commit and amend
+      - name: Add PR title to file and amend latest commit
         run: |
-          # Capture PR title
+          # Capture the PR title
           PR_TITLE="${{ github.event.pull_request.title }}"
-          
-          # Reset to the commit before the merge commit
-          git reset --soft HEAD~1
           
           # Add PR title to the file
           echo "${PR_TITLE}" >> your_file.txt
@@ -28,12 +25,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Amend the commit before the merge with the PR title changes
+          # Stage changes and amend the latest commit
           git add your_file.txt
           git commit --amend --no-edit
           
-          # Reapply the merge commit
-          git merge --no-ff HEAD@{1}
-          
-          # Force-push the amended history to develop
+          # Force-push the amended commit to develop
           git push origin develop --force
