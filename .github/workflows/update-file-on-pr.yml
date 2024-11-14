@@ -30,8 +30,8 @@ jobs:
           VERSION_NAME="${{ env.VERSION_NAME }}"
           USER_ID="${{ github.actor }}"
 
-          # Get all commit messages in the PR and format them with indentation
-          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" $(git merge-base origin/develop HEAD)..HEAD)
+          # Get all commit messages in the PR along with the author and format them
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s (by %an)" $(git merge-base origin/develop HEAD)..HEAD)
 
           # Prepare the entry for the changelog with PR title, user ID, and commit messages in a collapsible section
           COMMIT_SECTION="<details><summary>Commits</summary>\n${COMMIT_MESSAGES}\n</details>"
