@@ -22,7 +22,7 @@ jobs:
           VERSION_NAME=$(grep 'version.name' app/version.properties | cut -d'=' -f2 | xargs)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-      - name: Update CHANGES.md with PR title
+      - name: Update CHANGES.md with PR title if not already present
         run: |
           # Capture the PR title and version name
           PR_TITLE="${{ github.event.pull_request.title }}"
@@ -30,6 +30,12 @@ jobs:
 
           # Prepare the entry for the changelog
           NEW_ENTRY="- ${PR_TITLE}"
+
+          # Check if PR title already exists in CHANGES.md
+          if grep -qxF "${NEW_ENTRY}" app/CHANGES.md; then
+            echo "PR title already exists in CHANGES.md. Skipping update."
+            exit 0
+          fi
 
           # Update CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
