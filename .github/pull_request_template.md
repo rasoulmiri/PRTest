@@ -4,7 +4,6 @@
 
 ### Changes For Release
 
-
 ### Screenshots (if applicable)
 
 <!--- Put an `x` in all the boxes that apply: -->
