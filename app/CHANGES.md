@@ -1,4 +1,6 @@
 ## 7.88.0
+- f58 [Link to PR](https://github.com/rasoulmiri/PRTest/pull/36)
+
 - f45 [Link to PR](https://github.com/rasoulmiri/PRTest/pull/30)
 
 - f44 [Link to PR](https://github.com/rasoulmiri/PRTest/pull/29)
