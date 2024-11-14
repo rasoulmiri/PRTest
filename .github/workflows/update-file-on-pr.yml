@@ -1,4 +1,4 @@
-name: Update File with PR Title on Merge
+name: Update CHANGES.md with PR Title on Merge
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches: [develop]
 
 jobs:
-  amend-last-commit-with-pr-title:
+  update-changes-md:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
@@ -15,20 +15,37 @@ jobs:
         with:
           fetch-depth: 2  # Fetch enough history to amend the latest commit
 
-      - name: Add PR title to file and amend latest commit
+      - name: Read version from version.properties
+        id: read_version
         run: |
-          # Capture the PR title
+          # Extract version.name from version.properties
+          VERSION_NAME=$(grep 'version.name' app/version.properties | cut -d'=' -f2 | xargs)
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
+      - name: Update CHANGES.md with PR title
+        run: |
+          # Capture the PR title and version name
           PR_TITLE="${{ github.event.pull_request.title }}"
-          
-          # Add PR title to the file
-          echo "${PR_TITLE}" >> your_file.txt
-          
+          VERSION_NAME="${{ env.VERSION_NAME }}"
+
+          # Prepare the entry for the changelog
+          NEW_ENTRY="- ${PR_TITLE}"
+
+          # Update CHANGES.md
+          if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
+            # If version header exists, add PR title under it
+            sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
+          else
+            # If version header doesn't exist, create it with PR title
+            echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
+          fi
+
           # Configure Git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Stage changes and amend the latest commit
-          git add your_file.txt
+
+          # Stage and amend the latest commit
+          git add app/CHANGES.md
           git commit --amend --no-edit
           
           # Force-push the amended commit to develop
