@@ -1,9 +1,9 @@
-name: Update CHANGES.md with PR Title, User ID, and Commit Messages on Merge
+name: Update CHANGES.md with PR Title and Description on Merge
 
 on:
   pull_request:
     types: [closed]
-    branches: [develop]
+    branches: [main]  # Listen to merges into the main branch
 
 jobs:
   update-changes-md:
@@ -22,17 +22,16 @@ jobs:
           VERSION_NAME=$(grep 'version.name' version.properties | cut -d'=' -f2 | xargs)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-      - name: Capture PR title, user ID, and commit messages
+      - name: Capture PR title, user ID, and PR description
         id: pr_info
         run: |
-          # Capture the PR title, version name, and user ID
+          # Capture the PR title, version name, and PR description
           PR_TITLE="${{ github.event.pull_request.title }}"
-          VERSION_NAME="${{ env.VERSION_NAME }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
 
-          # Get the base commit (merge-base) and the PR commits
-          BASE_COMMIT=$(git merge-base origin/develop HEAD)
-
+          # Extract "### Changes For Release" section from PR description
+          CHANGE_DESCRIPTION=$(echo "$PR_BODY" | sed -n '/### Changes For Release/,/### /p' | sed '1d')
 
           # Prepare the full changelog entry
           NEW_ENTRY="- ${PR_TITLE} [Link to PR]($PR_URL)"
@@ -45,11 +44,11 @@ jobs:
 
           # Check if the version header already exists in CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
-            # If version header exists, add PR title with commit messages under it
-            sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
+            # If version header exists, add PR title and description with commit messages under it
+            sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}\n### Changes For Release\n<details><summary>Click to expand</summary>\n${CHANGE_DESCRIPTION}\n</details>" app/CHANGES.md
           else
-            # If version header doesn't exist, create it with PR title and commit messages at the top of the file
-            echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
+            # If version header doesn't exist, create it with PR title and description at the top of the file
+            echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n### Changes For Release\n<details><summary>Click to expand</summary>\n${CHANGE_DESCRIPTION}\n</details>\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
           fi
 
       - name: Configure Git
@@ -61,4 +60,4 @@ jobs:
         run: |
           git add app/CHANGES.md
           git commit --amend --no-edit
-          git push origin HEAD:develop --force
+          git push origin HEAD:main --force  # Ensure you are pushing to the main branch
