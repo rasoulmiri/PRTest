@@ -31,7 +31,7 @@ jobs:
           PR_URL="${{ github.event.pull_request.html_url }}"
 
           # Extract the PR description (if exists) under "### Changes For Release"
-          PR_DESCRIPTION=$(curl -s $PR_URL | grep -A 20 '### Changes For Release' | tail -n +2 | sed 's/^/  /')  # Indent description for markdown
+          PR_DESCRIPTION=$(curl -s $PR_URL | grep -A 20 '### Changes For Release' | tail -n +2 | sed 's/^/  /' | sed 's/$/\n/')  # Preserve multi-line description with indentation
 
           # Prepare the changelog entry
           NEW_ENTRY="- ${PR_TITLE} [Link to PR]($PR_URL)\n${PR_DESCRIPTION}"
