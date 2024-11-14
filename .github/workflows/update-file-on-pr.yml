@@ -37,7 +37,7 @@ jobs:
             exit 0
           fi
 
-          # Update CHANGES.md
+          # Check if the version header already exists in CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
             # If version header exists, add PR title under it
             sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
