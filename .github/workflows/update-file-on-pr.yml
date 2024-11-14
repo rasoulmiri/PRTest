@@ -34,7 +34,7 @@ jobs:
           PR_BODY="${{ github.event.pull_request.body }}"
 
           # Extract the part of the body after "### Changes For Release" and before the next "###"
-          PR_DESCRIPTION=$(echo "$PR_BODY" | sed -n '/### Changes For Release/{n;/###/{q};p}' | sed 's/^/  /')
+          PR_DESCRIPTION=$(echo "$PR_BODY" | sed -n '/### Changes For Release/{n;/###/{q};p}')
 
           # Prepare the changelog entry with the PR title and description
           NEW_ENTRY="- ${PR_TITLE} [Link to PR]($PR_URL)\n${PR_DESCRIPTION}"
