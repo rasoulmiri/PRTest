@@ -6,7 +6,7 @@ on:
     branches: [develop]
 
 jobs:
-  update-file-with-pr-title-on-merge:
+  amend-file-with-pr-title-on-merge:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
@@ -20,5 +20,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add your_file.txt
-          git commit -m "Add PR title: ${PR_TITLE} after merge"
-          git push origin develop
+          git commit --amend --no-edit  # Amend the last commit without changing the commit message
+          git push origin develop --force  # Force-push the amended commit to develop
