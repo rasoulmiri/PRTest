@@ -47,10 +47,12 @@ jobs:
 
           # Check if the version header already exists in CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
-            # If version header exists, add PR title and description under it
-            # We use sed to append the new entry after the version header.
-            sed -i '/## '${VERSION_NAME}'/a \
-            '"${NEW_ENTRY}"' app/CHANGES.md
+            awk -v new_entry="$NEW_ENTRY" -v version_name="## ${VERSION_NAME}" \
+            'BEGIN{found_version=0} 
+            $0 == version_name {found_version=1} 
+            found_version && $0 ~ /##/ && NR > 1 {exit} 
+            found_version {print new_entry} 
+            {print}' app/CHANGES.md > temp && mv temp app/CHANGES.md
           else
             # If version header doesn't exist, create it with PR title and description at the top
             # We can ensure the correct formatting by prepending the version header and the new entry to the file
