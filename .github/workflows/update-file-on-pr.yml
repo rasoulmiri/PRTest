@@ -18,8 +18,8 @@ jobs:
       - name: Read version from version.properties
         id: read_version
         run: |
-          # Extract version.name from version.properties
-          VERSION_NAME=$(grep 'version.name' app/version.properties | cut -d'=' -f2 | xargs)
+          # Extract version.name from version.properties in the root folder
+          VERSION_NAME=$(grep 'version.name' version.properties | cut -d'=' -f2 | xargs)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
       - name: Update CHANGES.md with PR title if not already present
