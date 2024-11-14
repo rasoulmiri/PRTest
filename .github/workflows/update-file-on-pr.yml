@@ -31,8 +31,8 @@ jobs:
           # Prepare the entry for the changelog
           NEW_ENTRY="- ${PR_TITLE}"
 
-          # Check if PR title already exists in CHANGES.md
-          if grep -qxF "${NEW_ENTRY}" app/CHANGES.md; then
+          # Check if PR title already exists anywhere in CHANGES.md
+          if grep -qF "${PR_TITLE}" app/CHANGES.md; then
             echo "PR title already exists in CHANGES.md. Skipping update."
             exit 0
           fi
