@@ -3,7 +3,7 @@ name: Update CHANGES.md with PR Title and Description on Merge
 on:
   pull_request:
     types: [closed]
-    branches: [main]  # Listen to merges into the main branch
+    branches: [main]  # Check for merges into the main branch
 
 jobs:
   update-changes-md:
@@ -19,24 +19,24 @@ jobs:
         id: read_version
         run: |
           # Extract version.name from version.properties in the root folder
-          VERSION_NAME=$(grep 'version.name' version.properties | cut -d'=' -f2 | xargs)
+          VERSION_NAME=$(grep 'version.name' version.properties | cut -d'=' -f2 | tr -d '[:space:]')  # Use tr to trim spaces
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-      - name: Capture PR title, user ID, and PR description
+      - name: Capture PR title, version name, and PR description
         id: pr_info
         run: |
-          # Capture the PR title, version name, and PR description
+          # Capture the PR title, version name, and PR URL
           PR_TITLE="${{ github.event.pull_request.title }}"
+          VERSION_NAME="${{ env.VERSION_NAME }}"
           PR_URL="${{ github.event.pull_request.html_url }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
 
-          # Extract "### Changes For Release" section from PR description
-          CHANGE_DESCRIPTION=$(echo "$PR_BODY" | sed -n '/### Changes For Release/,/### /p' | sed '1d')
+          # Extract the PR description (if exists) under "### Changes For Release"
+          PR_DESCRIPTION=$(curl -s $PR_URL | grep -A 20 '### Changes For Release' | tail -n +2 | sed 's/^/  /')  # Indent description for markdown
 
-          # Prepare the full changelog entry
-          NEW_ENTRY="- ${PR_TITLE} [Link to PR]($PR_URL)"
+          # Prepare the changelog entry
+          NEW_ENTRY="- ${PR_TITLE} [Link to PR]($PR_URL)\n${PR_DESCRIPTION}"
 
-          # Check if PR title already exists anywhere in CHANGES.md
+          # Check if PR title already exists in CHANGES.md
           if grep -qF "${PR_TITLE}" app/CHANGES.md; then
             echo "PR title already exists in CHANGES.md. Skipping update."
             exit 0
@@ -44,11 +44,11 @@ jobs:
 
           # Check if the version header already exists in CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
-            # If version header exists, add PR title and description with commit messages under it
-            sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}\n### Changes For Release\n<details><summary>Click to expand</summary>\n${CHANGE_DESCRIPTION}\n</details>" app/CHANGES.md
+            # If version header exists, add PR title and description under it
+            sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
           else
-            # If version header doesn't exist, create it with PR title and description at the top of the file
-            echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n### Changes For Release\n<details><summary>Click to expand</summary>\n${CHANGE_DESCRIPTION}\n</details>\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
+            # If version header doesn't exist, create it with PR title and description at the top
+            echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
           fi
 
       - name: Configure Git
@@ -60,4 +60,4 @@ jobs:
         run: |
           git add app/CHANGES.md
           git commit --amend --no-edit
-          git push origin HEAD:main --force  # Ensure you are pushing to the main branch
+          git push origin HEAD:main --force  # Push to the main branch
