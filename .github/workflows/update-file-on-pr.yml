@@ -30,8 +30,23 @@ jobs:
           VERSION_NAME="${{ env.VERSION_NAME }}"
           USER_ID="${{ github.actor }}"
 
-          # Get all commit messages in the PR along with the author and format them
-          COMMIT_MESSAGES=$(git log --pretty=format:"- %s (by %an)" $(git merge-base origin/develop HEAD)..HEAD)
+          # Get the base commit (merge-base) and the PR commits
+          BASE_COMMIT=$(git merge-base origin/develop HEAD)
+
+          # Capture all commit messages in the PR from the base commit to HEAD
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s (by %an)" $BASE_COMMIT..HEAD)
+
+          # If no commits are found, fall back to using `git rev-list` to make sure we get the right commits
+          if [ -z "$COMMIT_MESSAGES" ]; then
+            echo "No commits found using merge-base, using git rev-list instead."
+            COMMIT_MESSAGES=$(git rev-list --pretty=format:"- %s (by %an)" $BASE_COMMIT..HEAD)
+          fi
+
+          # Check if COMMIT_MESSAGES is still empty
+          if [ -z "$COMMIT_MESSAGES" ]; then
+            echo "No commit messages found, exiting."
+            exit 1
+          fi
 
           # Prepare the entry for the changelog with PR title, user ID, and commit messages in a collapsible section
           COMMIT_SECTION="<details><summary>Commits</summary>\n${COMMIT_MESSAGES}\n</details>"
