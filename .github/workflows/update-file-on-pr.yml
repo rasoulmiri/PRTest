@@ -42,7 +42,7 @@ jobs:
             # If version header exists, add PR title under it
             sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
           else
-            # If version header doesn't exist, create it with PR title
+            # If version header doesn't exist, create it with PR title at the top of the file
             echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
           fi
 
