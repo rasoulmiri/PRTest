@@ -1,0 +1,41 @@
+name: Update File with PR Title
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [develop]
+  pull_request_target:
+    types: [closed]
+    branches: [develop]
+
+jobs:
+  update-file-with-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}  # Check out the PR branch explicitly
+
+      - name: Update file with PR title
+        if: github.event.pull_request.merged == false
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "${PR_TITLE}" >> your_file.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add your_file.txt
+          git commit --amend --no-edit  # Amend the last commit without changing its message
+          git push origin HEAD:${{ github.head_ref }} --force  # Force-push to update the PR branch with the amended commit
+
+  merge-pr-title-to-develop:
+    if: github.event.pull_request.merged == true
+    needs: update-file-with-pr-title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Pull merged changes to update develop
+        run: |
+          git pull origin develop
