@@ -48,10 +48,12 @@ jobs:
           # Check if the version header already exists in CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
             # If version header exists, add PR title and description under it
+            # We use sed to append the new entry after the version header.
             sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
           else
             # If version header doesn't exist, create it with PR title and description at the top
-            echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
+            # We can ensure the correct formatting by prepending the version header and the new entry to the file
+            printf "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
           fi
 
       - name: Configure Git
