@@ -1,4 +1,4 @@
-name: Update CHANGES.md with PR Title on Merge
+name: Update CHANGES.md with PR Title, User ID, and Commit Messages on Merge
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2  # Fetch enough history to amend the latest commit
+          fetch-depth: 2  # Fetch enough history to access all PR commits
 
       - name: Read version from version.properties
         id: read_version
@@ -22,14 +22,22 @@ jobs:
           VERSION_NAME=$(grep 'version.name' version.properties | cut -d'=' -f2 | xargs)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-      - name: Update CHANGES.md with PR title if not already present
+      - name: Capture PR title, user ID, and commit messages
+        id: pr_info
         run: |
-          # Capture the PR title and version name
+          # Capture the PR title, version name, and user ID
           PR_TITLE="${{ github.event.pull_request.title }}"
           VERSION_NAME="${{ env.VERSION_NAME }}"
+          USER_ID="${{ github.actor }}"
 
-          # Prepare the entry for the changelog
-          NEW_ENTRY="- ${PR_TITLE}"
+          # Get all commit messages in the PR and format them with indentation
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" $(git merge-base origin/develop HEAD)..HEAD)
+
+          # Prepare the entry for the changelog with PR title, user ID, and commit messages in a collapsible section
+          COMMIT_SECTION="<details><summary>Commits</summary>\n${COMMIT_MESSAGES}\n</details>"
+
+          # Prepare the full changelog entry
+          NEW_ENTRY="- ${PR_TITLE} (Merged by @${USER_ID})\n${COMMIT_SECTION}"
 
           # Check if PR title already exists anywhere in CHANGES.md
           if grep -qF "${PR_TITLE}" app/CHANGES.md; then
@@ -39,20 +47,20 @@ jobs:
 
           # Check if the version header already exists in CHANGES.md
           if grep -q "## ${VERSION_NAME}" app/CHANGES.md; then
-            # If version header exists, add PR title under it
+            # If version header exists, add PR title with commit messages under it
             sed -i "/## ${VERSION_NAME}/a ${NEW_ENTRY}" app/CHANGES.md
           else
-            # If version header doesn't exist, create it with PR title at the top of the file
+            # If version header doesn't exist, create it with PR title and commit messages at the top of the file
             echo -e "## ${VERSION_NAME}\n${NEW_ENTRY}\n\n$(cat app/CHANGES.md)" > app/CHANGES.md
           fi
 
-          # Configure Git
+      - name: Configure Git
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage and amend the latest commit
+      - name: Stage and amend the latest commit
+        run: |
           git add app/CHANGES.md
           git commit --amend --no-edit
-          
-          # Force-push the amended commit to develop
           git push origin HEAD:develop --force
